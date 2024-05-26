@@ -1,0 +1,111 @@
+node_modules
+
+function viewAllRoles(){
+    DB.findAllRoles();
+    loadPrompt();
+};
+
+function viewAllEmployees(){
+    DB.findAllEmployees()
+    // .then(({rows}) => {
+    //         l
+    // })
+    // .then(() => );
+    loadPrompt();
+};
+
+function viewAllDepartments(){
+    DB.findAllDepartments();
+    loadPrompt();
+};
+
+function addDepartment(){;
+DB.addDepartment(answer);
+loadPrompt();
+};
+
+function addRole(){
+    prompt([
+        {
+        title: 'title',
+        message:"What is the name of the role?",
+    },
+        {
+        salary: 'last_name',
+        message:"What is the employee's last name?",
+    },
+
+    ]).then((answer) =>{
+        let firstName = answer.first_name;
+        let lastName = answer.last_name;
+    DB.addRole();
+    });
+
+}
+
+function viewEmployeesByDepartment(){
+    DB.findAllDepartments()
+    .then(({rows}) => {
+            let departments = rows;
+            const departmentChoices = departments.map(({id, dep_name}) => ({
+                name:dep_name,
+                value:id,
+            }))
+            console.log('\n');
+            console.table(departmentChoices);
+    })
+    .then(() => loadPrompt());
+}
+
+function addEmployee(){
+    prompt([
+        {
+        name: 'first_name',
+        message:"What is the employee's first name?",
+    },
+        {
+        name: 'last_name',
+        message:"What is the employee's last name?",
+    },
+
+    ]).then((answer) =>{
+        let firstName = answer.first_name;
+        let lastName = answer.last_name;
+
+        DB.findAllRoles().then(({ rows}) =>{
+            let roles = rows;
+            const roleChoices = roles.map(({id, title}) =>({
+                name: title,
+                value: id,
+            }));
+
+            prompt({
+                type:'list',
+                name:'roleId',
+                message:" What is the employee's role?",
+                choices: roleChoices, 
+            }).then((res) => {let roleId = res.roleID;
+
+                DB.findAllEmployees().then(({rows}) => {
+                    let employees = rows;
+                    const managerChoices = employees.map(
+                        ({ id, first_name, last_name}) =>({
+                            name:`${first_name} ${last_name}`,
+                            value: id,
+                        })
+                    );
+
+                    managerChoices.unshift({name:'None', values:null});
+                })
+            })
+        })
+    })
+}
+
+
+
+
+
+
+
+
