@@ -29,7 +29,7 @@ prompt([{
             },
             {
                 name:"Add a role",
-                value:"addRoles",
+                value:"addRole",
             },
             {
                 name:"Add an employee",
@@ -65,13 +65,13 @@ prompt([{
                   viewAllDepartments();
                   break;
               case "addDepartment":
-                  addaDepartment();
+                  addNewDepartment();
                   break;
               case "addRole":
-                  addaRole();
+                  addNewRole();
                   break;
               case "addEmployee":
-                  addaEmployee();
+                  addNewEmployee();
                   break;
               case "updateEmployee":
                   updateaEmployeeRole();
@@ -82,7 +82,9 @@ prompt([{
               case "viewbyDepartments":
                   viewEmployeesByDepartment();
                   break;
-                  
+              case "quit":
+                quit();
+                break; 
             //   default:
             //       connection.end();
             //       break;
@@ -109,10 +111,10 @@ function viewAllEmployees(){
     db.findAllEmployees()
     .then(({rows}) => {
             let employees = rows;
-            const employeesChoices = employees.map(({employees_id,first_name,last_name,role_id}) => ({
+            const employeesChoices = employees.map(({employees_id,first_name,last_name,salary}) => ({
                 name:first_name,last_name,
                 id: employees_id,
-                role: role_id,
+                salary: salary,
             }))
             console.log('\n');
             console.table(employeesChoices);
@@ -135,7 +137,7 @@ function viewAllDepartments(){
 .then(() => loadPrompt());
 };
 
-function addaDepartment(){
+function addNewDepartment(){
     prompt([
         {
         name: 'depName',
@@ -143,17 +145,15 @@ function addaDepartment(){
     },
 ]).then((res) =>{
     let newDepartment = res.depName;
-
 db.addDepartment(newDepartment);
 console.log('\n');
 console.log(`department added!`);
 console.log('\n');
-viewAllDepartments();
 })
-.then(() => loadPrompt());
+.then(() => viewAllDepartments());
 }
 
-function addaEmployee(){
+function addNewEmployee(){
     prompt([
         {
         name: 'firstName',
@@ -186,36 +186,35 @@ function addaEmployee(){
                
                                      
             }).then(() =>console.log(`Employee added!`))
-            .then(()=> viewAllEmployees())
-            .then(() => loadPrompt());
+            .then(()=> viewAllEmployees());
                             })
                         })
                     };
             
-function addaRole(){
+function addNewRole(){
     prompt([
         {
-        name: 'roleTitle',
+        name: 'title',
         message:"What is the name of the new role?",
     },
         {
-        name: 'roleSalary',
+        name: 'salary',
         message:"What is the role's salary?",
     },
 
     ]).then((answer) =>{
-        let newRole = answer.roleTitle;
-        let salary = answer.roleSalary;
-
+        let newRole = answer.title;
+        let salary = answer.salary;
+        console.log(`${newRole} ${salary}`)
         db.findAllDepartments()
         .then(({rows}) =>{
-            console.log(rows);
+            console.log(rows)
             let departments = rows;
             console.log(departments);
-            const departChoices = departments.map(({id, dep_name}) =>({
+            const departChoices = departments.map(({dep_name,id}) =>({
                 name: dep_name,
-                value: id,
-            }));
+                value:id,
+            }))
             prompt({
                 type:'list',
                 name:'depId',
@@ -225,33 +224,34 @@ function addaRole(){
                 let departmentId = res.depId;
             db.addRole(newRole,salary,departmentId);
         }).then(()=> console.log('Role added'))
-        .then(()=> viewAllRoles())
-        .then(() => loadPrompt());
+        .then(()=> viewAllRoles());
                     })
                 })
             };
     
 
-function viewEmployeesByDepartment(){
-    db.findAllDepartments()
-    .then(({rows}) => {
-            let departments = rows;
-            const departmentChoices = departments.map(({id, dep_name}) => ({
-                name:dep_name,
-                value:id,
-            }))
-            console.log('\n');
-            console.table(departmentChoices);
-    })
-    .then(() => loadPrompt());
-}
-
-
 
 function updateaEmployeeRole(){
-    db.updateEmployeeRole()
+    db.findAllEmployees()
+    .then(({rows}) => {
+            let employees = rows;
+            const employeesUpdate = employees.map(({employees_id,first_name,last_name}) => ({
+                name:first_name,last_name,
+                id: employees_id,
+            }));
+            prompt({
+                type:'list',
+                name:'updateemployee',
+                message:" What employee would you like to update?",
+                choices: employeesUpdate, 
+            }).then((res) => {
+                let employeechosen = res.updateemployee;
+                    db.updateEmployeeRolee();
+            })
+    })
     .then(() => loadPrompt());
-};
+
+}
 
 function removeaEmployee(){
     db.findAllEmployees()
@@ -270,8 +270,10 @@ function removeaEmployee(){
                 let employeeId = res.empId;
                 db.removeEmployee(employeeId);
       })})
-      .then(() => loadPrompt());
+      .then(() => viewAllEmployees());
     
 };
-
+function quit(){
+    console.log(`good bye!`)
+}
 loadPrompt();   
