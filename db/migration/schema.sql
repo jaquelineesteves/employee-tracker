@@ -4,7 +4,6 @@ CREATE DATABASE employeetracker_db;
 
 \c employeetracker_db;
 
-
 CREATE TABLE departments (
     id SERIAL PRIMARY KEY,
     dep_name VARCHAR(30) UNIQUE NOT NULL
@@ -25,5 +24,6 @@ CREATE TABLE employees (
     role_id INTEGER,
     manager_id INTEGER,
     FOREIGN KEY (role_id) REFERENCES roles(id)
+
     
 );
