@@ -16,7 +16,10 @@ class DB {
   }
 
   findAllEmployees(){
-    return this.query('SELECT * from employees');
+    return this.query(`SELECT role_id as id,employees_id,
+    first_name, last_name, salary
+    FROM employees JOIN roles ON employees.role_id = roles.id
+    `);
   };
   findEmployeesbydepartment(){
     return this.query('SELECT * FROM employees');
@@ -42,8 +45,8 @@ class DB {
       [firstName,lastName,roleId]
     );
   };
-  updateEmployeeRole(title,id) {
-    return this.query('UPDATE employees SET title $1 WHERE id = $2', [title,id]);
+  updateEmployeeRole(id) {
+    return this.query('UPDATE employees SET role_id $1 WHERE id = $2', [title,id]);
   };
 
   removeEmployee(employees_id) {
