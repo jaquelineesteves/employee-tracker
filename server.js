@@ -1,8 +1,11 @@
-const DB = require('./db'); 
+const DB = require('./db/index.js'); 
 const {prompt} = require('inquirer');
-
+const db = new DB();
+console.log('\n');
+console.log(`Employee Tracker, welcome to the manager page`);
+console.log('\n');
 function loadPrompt() {
-prompt({
+prompt([{
           type: "list",
           name: "choice",
           message: "What would you like to do?",
@@ -33,6 +36,10 @@ prompt({
                 value:"addEmployee",
             },
             {
+                name:"Remove an Employee",
+                value:"removeEmployee",
+            },
+            {
                 name:"Update an employee role",
                 value:"updateEmployee",
             },
@@ -42,10 +49,10 @@ prompt({
             },
             {
                 name:"quit",
-                value:"Quit",
+                value:"quit",
             },
           ]
-      }).then((answer) => {
+      }]).then((answer) => {
         let choices = answer.choice;
           switch (choices) {
               case "viewRoles":
@@ -54,109 +61,217 @@ prompt({
               case "viewEmployees":
                   viewAllEmployees();
                   break;
-              case "ViewDepartments":
+              case "viewDepartments":
                   viewAllDepartments();
                   break;
               case "addDepartment":
-                  addDepartment();
+                  addaDepartment();
                   break;
               case "addRole":
-                  addRole();
+                  addaRole();
                   break;
               case "addEmployee":
-                  addEmployee();
+                  addaEmployee();
                   break;
               case "updateEmployee":
-                  updateEmployeeRole();
+                  updateaEmployeeRole();
+                  break;
+              case "removeEmployee":
+                  removeaEmployee();
                   break;
               case "viewbyDepartments":
                   viewEmployeesByDepartment();
                   break;
-              default: 
-                  quit();
-                  connection.end();
-                  break;
-          }
+                  
+            //   default:
+            //       connection.end();
+            //       break;
+          };
       });
 }
 
-loadPrompt();
+function viewAllRoles(){
+    db.findAllRoles()
+    .then(({rows}) => {
+            let roles = rows;
+            const roleChoices = roles.map(({id, title, salary}) => ({
+                value:id,
+                role:title,
+                salary:salary,
+            }))
+            console.log('\n');
+            console.table(roleChoices);
+    })
+    .then(() => loadPrompt());
+};
+
+function viewAllEmployees(){
+    db.findAllEmployees()
+    .then(({rows}) => {
+            let employees = rows;
+            const employeesChoices = employees.map(({employees_id,first_name,last_name,role_id}) => ({
+                name:first_name,last_name,
+                id: employees_id,
+                role: role_id,
+            }))
+            console.log('\n');
+            console.table(employeesChoices);
+    })
+    .then(() => loadPrompt());
+
+}
+
+function viewAllDepartments(){
+    db.findAllDepartments()
+    .then(({rows}) => {
+        let departments = rows;
+        const departmentsChoices = departments.map(({id,dep_name}) => ({
+            department :dep_name,
+            id:id,
+        }))
+        console.log('\n');
+        console.table(departmentsChoices);
+})
+.then(() => loadPrompt());
+};
+
+function addaDepartment(){
+    prompt([
+        {
+        name: 'depName',
+        message:"What is the name of the department?",
+    },
+]).then((res) =>{
+    let newDepartment = res.depName;
+
+db.addDepartment(newDepartment);
+console.log('\n');
+console.log(`department added!`);
+console.log('\n');
+viewAllDepartments();
+})
+.then(() => loadPrompt());
+}
+
+function addaEmployee(){
+    prompt([
+        {
+        name: 'firstName',
+        message:"What is the employee's first name?",
+    },
+        {
+        name: 'last_name',
+        message:"What is the employee's last name?",
+    },
+
+    ]).then((answer) =>{
+        let firstName = answer.firstName;
+        let lastName = answer.last_name;
+
+        db.findAllRoles().then(({ rows}) =>{
+            let roles = rows;
+            const roleChoices = roles.map(({id, title}) =>({
+                name: title,
+                value: id,
+            }));
+
+            prompt({
+                type:'list',
+                name:'roleId',
+                message:" What is the employee's role?",
+                choices: roleChoices, 
+            }).then((res) => {
+                let roleId = res.roleId;
+                    db.addEmployee(firstName, lastName, roleId);
+               
+                                     
+            }).then(() =>console.log(`Employee added!`))
+            .then(()=> viewAllEmployees())
+            .then(() => loadPrompt());
+                            })
+                        })
+                    };
+            
+function addaRole(){
+    prompt([
+        {
+        name: 'roleTitle',
+        message:"What is the name of the new role?",
+    },
+        {
+        name: 'roleSalary',
+        message:"What is the role's salary?",
+    },
+
+    ]).then((answer) =>{
+        let newRole = answer.roleTitle;
+        let salary = answer.roleSalary;
+
+        db.findAllDepartments()
+        .then(({rows}) =>{
+            console.log(rows);
+            let departments = rows;
+            console.log(departments);
+            const departChoices = departments.map(({id, dep_name}) =>({
+                name: dep_name,
+                value: id,
+            }));
+            prompt({
+                type:'list',
+                name:'depId',
+                message:" What is the role's department?",
+                choices: departChoices, 
+            }).then((res) => {
+                let departmentId = res.depId;
+            db.addRole(newRole,salary,departmentId);
+        }).then(()=> console.log('Role added'))
+        .then(()=> viewAllRoles())
+        .then(() => loadPrompt());
+                    })
+                })
+            };
+    
+
+function viewEmployeesByDepartment(){
+    db.findAllDepartments()
+    .then(({rows}) => {
+            let departments = rows;
+            const departmentChoices = departments.map(({id, dep_name}) => ({
+                name:dep_name,
+                value:id,
+            }))
+            console.log('\n');
+            console.table(departmentChoices);
+    })
+    .then(() => loadPrompt());
+}
 
 
-// function addEmployee(){};
 
-// function updateEmployeeRole(){};
+function updateaEmployeeRole(){
+    db.updateEmployeeRole()
+    .then(() => loadPrompt());
+};
 
-// function viewEmployeesByManager(){};
+function removeaEmployee(){
+    db.findAllEmployees()
+        .then(({rows}) => {
+            let employees = rows;
+            const employeesToRemove = employees.map(({employees_id , first_name , last_name}) => ({
+                name:first_name,last_name,
+                value:employees_id,
+            }));
+            prompt({
+                type:'list',
+                name:'empId',
+                message:" Which employee would you like to remove?",
+                choices: employeesToRemove, 
+            }).then((res) => {
+                let employeeId = res.empId;
+                db.removeEmployee(employeeId);
+      })})
+      .then(() => loadPrompt());
+    
+};
 
-// function viewEmployeesByDepartment(){};
-
-// function quit(){};
-              
-
-// function getClient(username, password) {
-//   const pool = new Pool({
-//     // TODO: Enter PostgreSQL username
-//     user: username,
-//     // TODO: Enter PostgreSQL password
-//     password: password,
-//     host: 'localhost',
-//     database: 'books_db',
-//   });
-//   return pool;
-// }
-
-// function addBook(book) {
-//   return new Promise((resolve, reject) => {
-//     pool.query(
-//       'INSERT INTO favorite_books (book_name) VALUES ($1)',
-//       [book.title],
-//       function (err, { rows }) {
-//         if (err) {
-//           console.error(err);
-//           return reject(err);
-//         }
-//         console.log(rows);
-//         resolve(rows);
-//       }
-//     );
-//   });
-// }
-
-// function deleteBook(id) {
-//   return new Promise((resolve, reject) => {
-//     pool.query(
-//       'DELETE FROM favorite_books WHERE id = $1',
-//       [id],
-//       function (err, { rows }) {
-//         if (err) {
-//           console.error(err);
-//           return reject(err);
-//         }
-//         console.log(rows);
-//         resolve(rows);
-//       }
-//     );
-//   });
-// }
-
-// function getBooks() {
-//   return new Promise((resolve, reject) => {
-//     pool.query('SELECT * FROM favorite_books', function (err, { rows }) {
-//       if (err) {
-//         console.error(err);
-//         return reject(err);
-//       }
-//       console.log(rows);
-//       resolve(rows);
-//     });
-//   });
-// }
-
-// const pool = getClient('postgres', 'postgres');
-// pool.connect().then(() => {
-//   console.log('Connected to the database');
-//   app.listen(PORT, () => {
-//     console.log(`Server running on port ${PORT}`);
-//   });
-// });
+loadPrompt();   
