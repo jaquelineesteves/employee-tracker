@@ -151,7 +151,41 @@ console.log(`department added!`);
 console.log('\n');
 })
 .then(() => viewAllDepartments());
-}
+};
+
+
+function viewEmployeesByDepartment(){
+    db.findAllDepartments()
+    .then(({rows}) => {
+        let departments = rows;
+            const depChosen = departments.map(({id, dep_name}) => ({
+                name: dep_name,
+                value: id,
+            }));
+
+            prompt({
+                type:'list',
+                name:'depId',
+                message:" What department?",
+                choices: depChosen, 
+            }).then((res) => {
+                let depId = res.depId;
+            
+                db.findEmployeesbydepartment(depId)
+                .then(({rows}) => {
+                    let employees = rows;
+                    const employeesfromDep = employees.map(({dep_name,first_name,last_name,title,salary}) => ({
+                        department:dep_name,
+                        name:first_name,last_name,
+                        role: title,
+                        salary: salary,
+
+                    }))
+                    console.log('\n');
+                    console.table(employeesfromDep);
+                })})
+                })      
+            };
 
 function addNewEmployee(){
     prompt([
