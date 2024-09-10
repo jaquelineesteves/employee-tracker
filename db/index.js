@@ -1,0 +1,75 @@
+const pool = require('./connection');
+
+class DB {
+  constructor() {}
+
+  async query(sql, args = []) {
+    const client = await pool.connect();
+    try {
+      const result = await client.query(sql, args);
+      return result;
+    } catch (err) {
+      console.error(err);
+    } finally {
+      client.release();
+    }
+  }
+
+  findAllEmployees(){
+    return this.query(`SELECT role_id as id,employees_id,
+    first_name, last_name, salary
+    FROM employees JOIN roles ON employees.role_id = roles.id
+    `);
+  };
+  findEmployeesbydepartment(dep_id){
+    return this.query(`
+    SELECT
+    d.dep_name AS department,
+    e.first_name,
+    e.last_name,
+    r.title AS role,
+    r.salary
+FROM
+    employees e
+JOIN
+    roles r ON e.role_id = r.id
+JOIN
+    departments d ON r.dep_id = d.id
+WHERE
+    d.id = $1
+`,[dep_id]);
+  };
+  findAllDepartments() {
+    return this.query('SELECT * FROM departments');
+  };
+
+  findAllRoles(){
+    return this.query('SELECT * FROM roles');
+  };
+  addDepartment(dep_name) {
+    return this.query('INSERT INTO departments (dep_name) VALUES ($1)', [dep_name]);
+  };
+  addRole(title, salary, dep_id) {
+    return this.query(
+      'INSERT INTO roles (title,salary,dep_id) VALUES ($1, $2, $3)', 
+    [title, salary, dep_id]);
+  };
+  addEmployee(firstName, lastName, roleId) {
+    return this.query(
+      'INSERT INTO employees (first_name, last_name, role_id) VALUES ($1, $2, $3)',
+      [firstName,lastName,roleId]
+    );
+  };
+  updateEmployeeRole(id) {
+    return this.query('UPDATE employees SET role_id $1 WHERE id = $2', [title,id]);
+  };
+
+  removeEmployee(employees_id) {
+    return this.query('DELETE FROM employees WHERE id = $1', [employees_id]);
+  };
+
+}
+
+
+
+  module.exports = DB;
